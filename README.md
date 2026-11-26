@@ -1,19 +1,23 @@
 # AssetForge
 
-A procedural asset generator for our games, built in Godot 4.7 (GDScript). Move sliders, watch a 3D building update live, and (soon) hit **Create** to save it as a CC0 asset.
+A procedural asset generator for our games, built in Godot 4.7 (GDScript). Move sliders, watch a 3D building update live, and hit **Save (CC0)** to export it as a free asset.
 
-First asset type: isometric factory buildings. First consumer: Aegis Foundry.
+New here? Read [USAGE.md](USAGE.md).
+
+Asset types: isometric factory buildings and medieval castles and cottages (16 presets, ink outline). First consumer: Aegis Foundry.
 
 ## Status
 
-Work in progress.
+Release candidate 0.1.0-rc.1.
 
 | Done | Planned |
 | :--- | :--- |
-| Building recipe generator (seeded, deterministic) | Create button: export `.glb`, `.png` sprite, `.json` settings, CC0 license |
-| Mesh builder (flat-shaded, role colours, 4 palettes) | Iso sprite baking |
+| Building recipe generator (seeded, deterministic) | Gallery of every type and seed |
+| Mesh builder (flat-shaded, role colours, 4 palettes) | Fixed pixel-per-unit sprite scale |
 | Live preview app with sliders and orbit camera | Building presets (drill, refiner, bot bay, wall, rally) |
 | Plans (Box, L, T, U), gable and barn roofs, towers, fins | |
+| Medieval style: 16 presets, cone roofs, battlements, ink outline | |
+| Save (CC0): `.glb`, iso `.png` sprite, `.json`, license | |
 
 Plan and task list: [docs/procedural-buildings.md](docs/procedural-buildings.md)
 
@@ -89,6 +93,9 @@ Run a test file (each prints `FAILURES: N` and exits non-zero on failure):
 godot --headless --path . -s res://tests/test_building_recipe.gd
 godot --headless --path . -s res://tests/test_mesh_builder.gd
 godot --headless --path . -s res://tests/test_param_spec.gd
+godot --headless --path . -s res://tests/test_medieval_recipe.gd
+godot --headless --path . -s res://tests/test_asset_export.gd
+godot --headless --path . -s res://tests/test_random_building.gd
 ```
 
 Headless Godot cannot render, so how things look needs a windowed run.
