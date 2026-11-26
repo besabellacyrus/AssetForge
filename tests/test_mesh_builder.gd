@@ -13,6 +13,7 @@ func _init() -> void:
 	_test_winding_faces_out()
 	_test_full_building_builds()
 	_test_palettes()
+	_test_prisms()
 	print("FAILURES: %d" % failures)
 	quit(1 if failures > 0 else 0)
 
@@ -29,6 +30,9 @@ func _part(kind: String, role: String) -> Dictionary:
 	var p := {"kind": kind, "pos": Vector3(0, 1, 0), "size": Vector3(2, 2, 2), "role": role}
 	if kind == "frustum":
 		p["top"] = Vector2(1, 1)
+	if kind == "prism":
+		p["profile"] = [Vector2(-1, 0), Vector2(1, 0), Vector2(0, 1)]
+		p["axis"] = "x"
 	return p
 
 
@@ -74,7 +78,10 @@ func _test_winding_faces_out() -> void:
 	# Godot front faces are clockwise: the geometric normal from the winding must point INTO the part,
 	# while the stored vertex normals point OUT of it.
 	var pal := MeshBuilder.default_palette()
-	var parts := [_part("box", BuildingRecipe.ROLE_CONCRETE), _part("frustum", BuildingRecipe.ROLE_CONCRETE), _part("cylinder", BuildingRecipe.ROLE_DARK)]
+	var barn := _part("prism", BuildingRecipe.ROLE_CONCRETE)
+	barn["profile"] = [Vector2(-1, 0), Vector2(1, 0), Vector2(0.55, 0.65), Vector2(0, 1), Vector2(-0.55, 0.65)]
+	barn["axis"] = "z"
+	var parts := [_part("box", BuildingRecipe.ROLE_CONCRETE), _part("frustum", BuildingRecipe.ROLE_CONCRETE), _part("cylinder", BuildingRecipe.ROLE_DARK), _part("prism", BuildingRecipe.ROLE_CONCRETE), barn]
 	for part: Dictionary in parts:
 		var mesh := MeshBuilder.build_mesh([part], pal)
 		var ok := mesh != null and _verts(mesh).size() > 0
@@ -100,14 +107,26 @@ func _test_full_building_builds() -> void:
 
 
 func _test_palettes() -> void:
-	var roles := [BuildingRecipe.ROLE_CONCRETE, BuildingRecipe.ROLE_TRIM, BuildingRecipe.ROLE_DARK, BuildingRecipe.ROLE_GLOW, BuildingRecipe.ROLE_WINDOW]
+	var roles := [BuildingRecipe.ROLE_CONCRETE, BuildingRecipe.ROLE_TRIM, BuildingRecipe.ROLE_DARK, BuildingRecipe.ROLE_GLOW]
 	var ok := true
-	for i in 3:
+	for i in 4:
 		var pal := MeshBuilder.palette(i)
 		for r in roles:
 			if not pal.has(r):
 				ok = false
 	_check(ok, "every palette defines every role")
 	_check(str(MeshBuilder.palette(0)) != str(MeshBuilder.palette(1)), "palettes differ")
-	_check(str(MeshBuilder.palette(99)) == str(MeshBuilder.palette(2)), "out-of-range palette index clamps")
+	_check(str(MeshBuilder.palette(99)) == str(MeshBuilder.palette(3)), "out-of-range palette index clamps to the last")
+	var plain := MeshBuilder.palette(0)
+	_check(not plain.is_empty() and (plain[BuildingRecipe.ROLE_CONCRETE] as Color).get_luminance() > 0.6, "palette 0 is the light Plain palette")
 	_check(str(MeshBuilder.default_palette()) == str(MeshBuilder.palette(0)), "default palette is palette 0")
+
+
+func _test_prisms() -> void:
+	var pal := MeshBuilder.default_palette()
+	var gable := MeshBuilder.build_mesh([_part("prism", BuildingRecipe.ROLE_CONCRETE)], pal)
+	_check(gable != null and _verts(gable).size() == 24, "gable prism has 24 vertices (3 sides + 2 caps)")
+	var barn := _part("prism", BuildingRecipe.ROLE_CONCRETE)
+	barn["profile"] = [Vector2(-1, 0), Vector2(1, 0), Vector2(0.55, 0.65), Vector2(0, 1), Vector2(-0.55, 0.65)]
+	var barn_mesh := MeshBuilder.build_mesh([barn], pal)
+	_check(barn_mesh != null and _verts(barn_mesh).size() == 48, "barn prism has 48 vertices (5 sides + 2 caps)")

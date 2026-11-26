@@ -11,8 +11,9 @@ Work in progress.
 | Done | Planned |
 | :--- | :--- |
 | Building recipe generator (seeded, deterministic) | Create button: export `.glb`, `.png` sprite, `.json` settings, CC0 license |
-| Mesh builder (flat-shaded, role colours, 3 palettes) | Iso sprite baking |
-| Live preview app with sliders and orbit camera | Windows on upper tiers, building presets (drill, refiner, bot bay, wall, rally) |
+| Mesh builder (flat-shaded, role colours, 4 palettes) | Iso sprite baking |
+| Live preview app with sliders and orbit camera | Building presets (drill, refiner, bot bay, wall, rally) |
+| Plans (Box, L, T, U), gable and barn roofs, towers, fins | |
 
 Plan and task list: [docs/procedural-buildings.md](docs/procedural-buildings.md)
 
@@ -34,22 +35,27 @@ godot --path .
 
 | Setting | Range | Effect |
 | :--- | :--- | :--- |
-| Seed | 1–9999 | Varies tank sizes, window lighting, roof item placement |
+| Seed | 1–9999 | Varies tank sizes and roof item placement |
+| Plan | Box, L, T, U | Footprint shape built from wings (U leaves a front courtyard) |
+| Wing thickness | 0.25–0.6 | Thickness of the wings on L, T and U plans |
 | Width, Depth, Height | 4–14, 4–14, 2–16 | Building size |
-| Tiers, Setback | 1–3, 0–0.4 | Stacked tiers, each inset from the one below |
-| Roof | Flat, Hipped, Stepped | Roof style |
+| Tiers, Setback | 1–3, 0–0.4 | Stacked tiers on the Box plan, each inset from the one below |
+| Offset setback | on/off | Tiers stay flush with the back-left corner (stepped tower) |
+| Roof | Flat, Hipped, Stepped, Gable, Barn | Roof style. Gable and Barn follow each wing's long side |
+| Roof pitch | 0.2–1.0 | Height of Gable and Barn roofs |
 | Awning | 0–1 | Front awning size (0 removes it) |
+| Fins | 0–6 | Full-height vertical fins on the front face |
+| Front units | 0–4 | Small boxes along the ground at the front |
 | Tanks | 0–4 | Cylinders standing against the right face |
-| Window columns | 0–6 | Window grid on the two faces the iso camera sees |
-| Roof units, Chimneys | 0–4, 0–3 | Rooftop clutter |
+| Roof units, Chimneys | 0–4, 0–3 | Rooftop clutter (sloped roofs take chimneys and antenna only) |
 | Antenna | on/off | Pole with a glowing tip |
 | Corner pillars, Trim bands | on/off | Trim details |
-| Palette | Industrial, Steel, Rust | Colour set |
+| Palette | Plain, Industrial, Steel, Rust | Colour set. Plain is a single light tone |
 
 ## How it works
 
 ```
-BuildingRecipe  params -> list of parts (boxes, frustums, cylinders) with colour roles   [pure]
+BuildingRecipe  params -> list of parts (boxes, frustums, cylinders, prisms) with colour roles   [pure]
 MeshBuilder     parts  -> ArrayMesh, flat normals, vertex colours from a palette          [pure]
 ParamSpec       slider ranges and value labels                                            [pure]
 AssetApp        window: slider panel + 3D preview

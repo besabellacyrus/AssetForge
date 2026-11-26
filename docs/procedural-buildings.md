@@ -87,7 +87,8 @@ tests/test_mesh_builder.gd          vertex/face counts, colors per role
 - [x] 3a. `ParamSpec` (slider ranges, value labels) + tests.
 - [x] 3b. `App.tscn` window: sliders, live 3D preview, orbit camera (`OrbitCamera`). Verified by a headless frame capture; look needs your review.
 - [x] 3d. More features: windows (iso faces), roof units, chimneys, antenna, corner pillars, trim bands, 3 palettes (Industrial, Steel, Rust). Tanks moved outside the body (they were buried). Scrolling slider panel. Tests green.
-- [ ] 3e. Windows on upper tiers; roof-style variety; more building types (drill, refiner, bot bay, wall, rally presets).
+- [x] 3e. Shapes from reference sheet: plans (Box, L, T, U), gable and barn roofs with pitch, offset setback towers, fins, front units, Plain palette (default). Windows removed.
+- [ ] 3f. Building presets (drill, refiner, bot bay, wall, rally).
 - [ ] 3c. Create button: export `.glb` + `.png` + `.json` + CC0 license to `out/<name>/`.
 - [ ] 7. Run all tests. Ask before any push.
 

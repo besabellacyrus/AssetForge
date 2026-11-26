@@ -8,9 +8,10 @@ const CYL_SEGMENTS := 8
 
 
 const PALETTES := [
-	{"concrete": "8b9097", "trim": "d4b53a", "dark": "3a3f47", "glow": "22d3ee", "window": "2b4a63"},
-	{"concrete": "a9b4c0", "trim": "5f7a96", "dark": "2b3440", "glow": "7dd3fc", "window": "1e3a5f"},
-	{"concrete": "9a8f86", "trim": "c2410c", "dark": "3b2f2a", "glow": "fbbf24", "window": "3d2b24"},
+	{"concrete": "d8d5cf", "trim": "c4c0b8", "dark": "8f8b85", "glow": "eae7e1"},
+	{"concrete": "8b9097", "trim": "d4b53a", "dark": "3a3f47", "glow": "22d3ee"},
+	{"concrete": "a9b4c0", "trim": "5f7a96", "dark": "2b3440", "glow": "7dd3fc"},
+	{"concrete": "9a8f86", "trim": "c2410c", "dark": "3b2f2a", "glow": "fbbf24"},
 ]
 
 
@@ -64,6 +65,8 @@ static func _part_triangles(part: Dictionary) -> Array:
 			return _frustum_tris(pos, size, top * 0.5)
 		"cylinder":
 			return _cylinder_tris(pos, size)
+		"prism":
+			return _prism_tris(pos, size, part["profile"], part["axis"])
 	return []
 
 
@@ -129,6 +132,39 @@ static func _cylinder_tris(pos: Vector3, size: Vector3) -> Array:
 		out.append_array(_quad(b0, b1, t1, t0, mid - pos))
 		out.append_array(_tri(centre_top, t0, t1, Vector3.UP))
 		out.append_array(_tri(centre_bottom, b1, b0, Vector3.DOWN))
+	return out
+
+
+# Extrudes a convex 2D profile along the ridge axis. Profile x in [-1, 1] spans the width across
+# the ridge, profile y in [0, 1] spans the height. Sides are quads; both end caps are triangle fans.
+static func _prism_tris(pos: Vector3, size: Vector3, profile: Array, axis: String) -> Array:
+	var out: Array = []
+	var n := profile.size()
+	var y0 := pos.y - size.y * 0.5
+	var along_x := axis == "x"
+	var half_len := (size.x if along_x else size.z) * 0.5
+	var half_across := (size.z if along_x else size.x) * 0.5
+	var ends: Array = []
+	for s in [-1.0, 1.0]:
+		var ring: Array = []
+		for v: Vector2 in profile:
+			var a := v.x * half_across
+			var l: float = s * half_len
+			if along_x:
+				ring.append(Vector3(pos.x + l, y0 + v.y * size.y, pos.z + a))
+			else:
+				ring.append(Vector3(pos.x + a, y0 + v.y * size.y, pos.z + l))
+		ends.append(ring)
+	var near: Array = ends[0]
+	var far: Array = ends[1]
+	for i in n:
+		var j := (i + 1) % n
+		var mid: Vector3 = (near[i] + near[j] + far[j] + far[i]) * 0.25
+		out.append_array(_quad(near[i], near[j], far[j], far[i], mid - pos))
+	var axis_dir := Vector3.RIGHT if along_x else Vector3.BACK
+	for k in range(1, n - 1):
+		out.append_array(_tri(near[0], near[k], near[k + 1], -axis_dir))
+		out.append_array(_tri(far[0], far[k], far[k + 1], axis_dir))
 	return out
 
 
