@@ -5,6 +5,9 @@ A procedural asset generator for our games, built in Godot 4.7 (GDScript). Move 
 New here? Read [USAGE.md](USAGE.md).
 
 Asset types: isometric factory buildings and medieval castles and cottages (16 presets, ink outline). First consumer: Aegis Foundry.
+First asset type: isometric factory buildings. First consumer: Aegis Foundry.
+<img width="1156" height="645" alt="image" src="https://github.com/user-attachments/assets/d49a4f17-cad8-451f-9f2a-d5f3da993cf6" />
+
 
 ## Status
 
