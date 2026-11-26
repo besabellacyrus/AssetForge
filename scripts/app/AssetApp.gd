@@ -5,7 +5,8 @@ extends Control
 
 var params := BuildingRecipe.default_params()
 var _mesh: MeshInstance3D
-var _seed_slider: HSlider
+var _sliders := {}
+var _value_labels := {}
 var _camera: OrbitCamera
 
 
@@ -51,12 +52,13 @@ func _build_panel() -> Control:
 		row.add_child(head)
 		row.add_child(slider)
 		panel.add_child(row)
-		if key == "seed":
-			_seed_slider = slider
-	var reroll := Button.new()
-	reroll.text = "Re-roll seed"
-	reroll.pressed.connect(_on_reroll)
-	panel.add_child(reroll)
+		_sliders[key] = slider
+		_value_labels[key] = value_label
+	var generate := Button.new()
+	generate.text = "Generate"
+	generate.tooltip_text = "Roll a new random building. Every slider changes, keep the seed to repeat it."
+	generate.pressed.connect(_on_generate)
+	panel.add_child(generate)
 	return panel
 
 
@@ -102,8 +104,14 @@ func _on_param_changed(value: float, key: String, value_label: Label) -> void:
 	_rebuild()
 
 
-func _on_reroll() -> void:
-	_seed_slider.value = randi_range(1, 9999)
+func _on_generate() -> void:
+	var rolled := RandomBuilding.roll(randi())
+	for key: String in rolled:
+		params[key] = rolled[key]
+		var slider: HSlider = _sliders[key]
+		slider.set_value_no_signal(rolled[key])
+		(_value_labels[key] as Label).text = ParamSpec.format_value(key, rolled[key])
+	_rebuild()
 
 
 func _rebuild() -> void:

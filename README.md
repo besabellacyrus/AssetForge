@@ -29,7 +29,7 @@ godot --path .
 
 - Left panel: sliders. Everything rebuilds as you move them.
 - Right side: left-drag to rotate, mouse wheel to zoom.
-- **Re-roll seed** picks a random seed. The same settings and seed always give the same building.
+- **Generate** rolls a new random building: every slider changes to a sensible random value. The seed is part of the roll, so the same seed always gives the same building.
 
 ## Settings
 
