@@ -3,6 +3,8 @@
 A procedural asset generator for our games, built in Godot 4.7 (GDScript). Move sliders, watch a 3D building update live, and (soon) hit **Create** to save it as a CC0 asset.
 
 First asset type: isometric factory buildings. First consumer: Aegis Foundry.
+<img width="1156" height="645" alt="image" src="https://github.com/user-attachments/assets/d49a4f17-cad8-451f-9f2a-d5f3da993cf6" />
+
 
 ## Status
 
