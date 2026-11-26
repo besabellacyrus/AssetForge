@@ -88,8 +88,9 @@ tests/test_mesh_builder.gd          vertex/face counts, colors per role
 - [x] 3b. `App.tscn` window: sliders, live 3D preview, orbit camera (`OrbitCamera`). Verified by a headless frame capture; look needs your review.
 - [x] 3d. More features: windows (iso faces), roof units, chimneys, antenna, corner pillars, trim bands, 3 palettes (Industrial, Steel, Rust). Tanks moved outside the body (they were buried). Scrolling slider panel. Tests green.
 - [x] 3e. Shapes from reference sheet: plans (Box, L, T, U), gable and barn roofs with pitch, offset setback towers, fins, front units, Plain palette (default). Windows removed.
+- [x] 3g. Medieval style (castles and cottages from the reference sheet): `style` toggle, 16 presets in `MedievalPresets`, `MedievalRecipe`, `cone` primitive, blue/red/green/purple roof palettes, ink outline (inverted hull, `MeshBuilder.build_outline_mesh`). Factory look unchanged.
 - [ ] 3f. Building presets (drill, refiner, bot bay, wall, rally).
-- [ ] 3c. Create button: export `.glb` + `.png` + `.json` + CC0 license to `out/<name>/`.
+- [x] 3c. Save button (CC0): export `.glb` + `.png` + `.json` + CC0 license to `out/<name>/`.
 - [ ] 7. Run all tests. Ask before any push.
 
 ## 6. Risks

@@ -12,6 +12,7 @@ func _init() -> void:
 	_test_seeds_differ()
 	_test_rolls_build()
 	_test_plans_vary()
+	_test_medieval_rolls()
 	print("FAILURES: %d" % failures)
 	quit(1 if failures > 0 else 0)
 
@@ -74,3 +75,23 @@ func _test_plans_vary() -> void:
 		roofs[int(rolled.get("roof", -1))] = true
 	_check(plans.size() == 4, "200 rolls use all four plans")
 	_check(roofs.size() == 5, "200 rolls use all five roof styles")
+
+
+func _test_medieval_rolls() -> void:
+	var ok := true
+	var presets := {}
+	for seed in range(1, 201):
+		var rolled := RandomBuilding.roll(seed, 1)
+		if int(rolled["style"]) != 1 or int(rolled["outline"]) != 1:
+			ok = false
+		presets[int(rolled["medieval"])] = true
+		for spec: Dictionary in ParamSpec.specs():
+			var v := float(rolled.get(spec["key"], -1000.0))
+			if v < float(spec["min"]) - 0.0001 or v > float(spec["max"]) + 0.0001:
+				ok = false
+		if BuildingRecipe.build(rolled).is_empty():
+			ok = false
+	_check(ok, "200 medieval rolls are medieval, inked, in range and build")
+	_check(presets.size() == 16, "200 medieval rolls reach all 16 presets")
+	_check(str(RandomBuilding.roll(9, 1)) == str(RandomBuilding.roll(9, 1)), "medieval roll is deterministic")
+	_check(int(RandomBuilding.roll(9)["style"]) == 0, "default roll stays factory")

@@ -14,6 +14,9 @@ func _init() -> void:
 	_test_full_building_builds()
 	_test_palettes()
 	_test_prisms()
+	_test_cone()
+	_test_medieval_palettes()
+	_test_outline()
 	print("FAILURES: %d" % failures)
 	quit(1 if failures > 0 else 0)
 
@@ -81,7 +84,7 @@ func _test_winding_faces_out() -> void:
 	var barn := _part("prism", BuildingRecipe.ROLE_CONCRETE)
 	barn["profile"] = [Vector2(-1, 0), Vector2(1, 0), Vector2(0.55, 0.65), Vector2(0, 1), Vector2(-0.55, 0.65)]
 	barn["axis"] = "z"
-	var parts := [_part("box", BuildingRecipe.ROLE_CONCRETE), _part("frustum", BuildingRecipe.ROLE_CONCRETE), _part("cylinder", BuildingRecipe.ROLE_DARK), _part("prism", BuildingRecipe.ROLE_CONCRETE), barn]
+	var parts := [_part("box", BuildingRecipe.ROLE_CONCRETE), _part("frustum", BuildingRecipe.ROLE_CONCRETE), _part("cylinder", BuildingRecipe.ROLE_DARK), _part("prism", BuildingRecipe.ROLE_CONCRETE), barn, _part("cone", "roof")]
 	for part: Dictionary in parts:
 		var mesh := MeshBuilder.build_mesh([part], pal)
 		var ok := mesh != null and _verts(mesh).size() > 0
@@ -130,3 +133,40 @@ func _test_prisms() -> void:
 	barn["profile"] = [Vector2(-1, 0), Vector2(1, 0), Vector2(0.55, 0.65), Vector2(0, 1), Vector2(-0.55, 0.65)]
 	var barn_mesh := MeshBuilder.build_mesh([barn], pal)
 	_check(barn_mesh != null and _verts(barn_mesh).size() == 48, "barn prism has 48 vertices (5 sides + 2 caps)")
+
+
+func _test_cone() -> void:
+	var mesh := MeshBuilder.build_mesh([_part("cone", "roof")], MeshBuilder.palette(0, 1))
+	_check(mesh != null and _verts(mesh).size() == MeshBuilder.CYL_SEGMENTS * 6, "cone has a side and a base triangle per segment")
+	var tip := -INF
+	for v in _verts(mesh):
+		tip = maxf(tip, v.y)
+	_check(is_equal_approx(tip, 2.0), "cone apex sits at the top of its box")
+
+
+func _test_medieval_palettes() -> void:
+	var roles := ["concrete", "trim", "dark", "glow", "roof", "thatch", "crop", "soil"]
+	var ok := true
+	for style in 2:
+		for i in 4:
+			var pal := MeshBuilder.palette(i, style)
+			for r in roles:
+				if not pal.has(r):
+					ok = false
+	_check(ok, "every palette in both styles defines every role (no magenta fallback)")
+	_check(str(MeshBuilder.palette(0, 1)) != str(MeshBuilder.palette(0, 0)), "medieval palette differs from factory")
+	_check(str(MeshBuilder.palette(0, 1)["roof"]) != str(MeshBuilder.palette(1, 1)["roof"]), "medieval palettes change the roof colour")
+	_check(str(MeshBuilder.palette(2)) == str(MeshBuilder.palette(2, 0)), "style defaults to factory")
+
+
+func _test_outline() -> void:
+	var parts := [_part("box", "concrete")]
+	var main := MeshBuilder.build_mesh(parts, MeshBuilder.default_palette())
+	var ink := MeshBuilder.build_outline_mesh(parts, 0.1)
+	_check(ink != null and _verts(ink).size() == _verts(main).size(), "outline has the same triangles as the mesh")
+	var grown := 2.0 + 2.0 * 0.1 / sqrt(3.0)
+	_check(ink != null and is_equal_approx(ink.get_aabb().size.x, grown), "outline grows a box corner along its smoothed normal")
+	_check(MeshBuilder.build_outline_mesh([], 0.1) == null, "no parts gives no outline")
+	var arrays := ink.surface_get_arrays(0)
+	var colours: PackedColorArray = arrays[Mesh.ARRAY_COLOR]
+	_check(colours.size() == 36 and colours[0].is_equal_approx(MeshBuilder.INK), "outline is ink coloured")

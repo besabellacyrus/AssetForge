@@ -24,6 +24,9 @@ const GLOW_DEPTH := 0.05
 const FIN_DEPTH := 0.35
 const FIN_INSET := 0.05
 
+const STYLE_FACTORY := 0
+const STYLE_MEDIEVAL := 1
+
 const ROOF_FLAT := 0
 const ROOF_HIPPED := 1
 const ROOF_STEPPED := 2
@@ -41,6 +44,9 @@ const BARN_PROFILE := [Vector2(-1, 0), Vector2(1, 0), Vector2(0.55, 0.65), Vecto
 
 static func default_params() -> Dictionary:
 	return {
+		"style": STYLE_FACTORY,
+		"medieval": 0,
+		"outline": 0,
 		"seed": 1,
 		"width": 8.0,
 		"depth": 8.0,
@@ -67,6 +73,8 @@ static func default_params() -> Dictionary:
 
 static func build(params: Dictionary) -> Array:
 	var p := _normalize(params)
+	if p["style"] == STYLE_MEDIEVAL:
+		return MedievalRecipe.build(p)
 	var rng := RandomNumberGenerator.new()
 	rng.seed = int(p["seed"])
 	var parts: Array = []
@@ -117,6 +125,9 @@ static func _normalize(params: Dictionary) -> Dictionary:
 	for k in params:
 		if d.has(k):
 			d[k] = params[k]
+	d["style"] = clampi(int(d["style"]), STYLE_FACTORY, STYLE_MEDIEVAL)
+	d["medieval"] = clampi(int(d["medieval"]), 0, MedievalPresets.COUNT - 1)
+	d["outline"] = clampi(int(d["outline"]), 0, 1)
 	d["width"] = clampf(float(d["width"]), 4.0, 14.0)
 	d["depth"] = clampf(float(d["depth"]), 4.0, 14.0)
 	d["height"] = clampf(float(d["height"]), 2.0, 16.0)

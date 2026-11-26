@@ -6,12 +6,19 @@ extends RefCounted
 const ROOF_NAMES := ["Flat", "Hipped", "Stepped", "Gable", "Barn"]
 const PLAN_NAMES := ["Box", "L", "T", "U"]
 const PALETTE_NAMES := ["Plain", "Industrial", "Steel", "Rust"]
+const MEDIEVAL_PALETTE_NAMES := ["Blue roofs", "Red roofs", "Green roofs", "Purple roofs"]
+const STYLE_NAMES := ["Factory", "Medieval"]
+# Sliders the medieval style uses. The rest only apply to the factory style.
+const MEDIEVAL_KEYS := ["style", "medieval", "outline", "seed", "width", "depth", "height", "palette"]
 const WHOLE_KEYS := ["seed", "tiers", "tanks", "fins", "front_units", "roof_units", "chimneys"]
-const TOGGLE_KEYS := ["offset", "antenna", "pillars", "bands"]
+const TOGGLE_KEYS := ["offset", "antenna", "pillars", "bands", "outline"]
 
 
 static func specs() -> Array:
 	return [
+		{"key": "style", "label": "Style", "min": 0, "max": 1, "step": 1, "default": 0},
+		{"key": "medieval", "label": "Medieval building", "min": 0, "max": MedievalPresets.COUNT - 1, "step": 1, "default": 0},
+		{"key": "outline", "label": "Ink outline", "min": 0, "max": 1, "step": 1, "default": 0},
 		{"key": "seed", "label": "Seed", "min": 1, "max": 9999, "step": 1, "default": 1},
 		{"key": "plan", "label": "Plan", "min": 0, "max": 3, "step": 1, "default": 0},
 		{"key": "wing", "label": "Wing thickness", "min": 0.25, "max": 0.6, "step": 0.05, "default": 0.4},
@@ -36,13 +43,23 @@ static func specs() -> Array:
 	]
 
 
-static func format_value(key: String, value: float) -> String:
+static func is_visible(key: String, style: int) -> bool:
+	if style == BuildingRecipe.STYLE_MEDIEVAL:
+		return key in MEDIEVAL_KEYS
+	return key != "medieval"
+
+
+static func format_value(key: String, value: float, style: int = 0) -> String:
+	if key == "style":
+		return _name(STYLE_NAMES, value)
+	if key == "medieval":
+		return _name(MedievalPresets.NAMES, value)
 	if key == "roof":
 		return _name(ROOF_NAMES, value)
 	if key == "plan":
 		return _name(PLAN_NAMES, value)
 	if key == "palette":
-		return _name(PALETTE_NAMES, value)
+		return _name(MEDIEVAL_PALETTE_NAMES if style == BuildingRecipe.STYLE_MEDIEVAL else PALETTE_NAMES, value)
 	if key in TOGGLE_KEYS:
 		return "On" if value >= 0.5 else "Off"
 	if key in WHOLE_KEYS:

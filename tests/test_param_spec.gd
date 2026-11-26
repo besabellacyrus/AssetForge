@@ -10,6 +10,7 @@ func _init() -> void:
 	_test_defaults_in_range()
 	_test_default_values_match_recipe()
 	_test_format_value()
+	_test_medieval_specs()
 	print("FAILURES: %d" % failures)
 	quit(1 if failures > 0 else 0)
 
@@ -70,3 +71,15 @@ func _test_format_value() -> void:
 	_check(ParamSpec.format_value("roof", 3.0) == "Gable" and ParamSpec.format_value("roof", 4.0) == "Barn", "new roof names")
 	_check(ParamSpec.format_value("offset", 1.0) == "On", "offset setback is a toggle")
 	_check(ParamSpec.format_value("fins", 4.0) == "4", "fin count is a whole number")
+
+
+func _test_medieval_specs() -> void:
+	_check(ParamSpec.format_value("style", 0.0) == "Factory" and ParamSpec.format_value("style", 1.0) == "Medieval", "style shows its name")
+	_check(ParamSpec.format_value("medieval", 1.0) == MedievalPresets.NAMES[1], "medieval preset shows its name")
+	_check(ParamSpec.format_value("outline", 1.0) == "On", "outline is a toggle")
+	_check(ParamSpec.format_value("palette", 1.0, 0) == "Industrial", "factory palette names")
+	_check(ParamSpec.format_value("palette", 1.0, 1) != "Industrial", "medieval palette names differ")
+	_check(_spec_for("medieval")["max"] == MedievalPresets.COUNT - 1, "medieval slider spans every preset")
+	_check(not ParamSpec.is_visible("medieval", 0) and ParamSpec.is_visible("medieval", 1), "preset slider only shows in medieval")
+	_check(ParamSpec.is_visible("tanks", 0) and not ParamSpec.is_visible("tanks", 1), "factory sliders hide in medieval")
+	_check(ParamSpec.is_visible("seed", 1) and ParamSpec.is_visible("palette", 1) and ParamSpec.is_visible("outline", 1), "shared sliders always show")

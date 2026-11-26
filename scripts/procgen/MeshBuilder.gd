@@ -15,9 +15,25 @@ const PALETTES := [
 ]
 
 
-static func palette(index: int) -> Dictionary:
-	var src: Dictionary = PALETTES[clampi(index, 0, PALETTES.size() - 1)]
+const INK := Color8(18, 13, 20)
+
+# Roles only the medieval style uses. Every palette carries them so no part falls back to magenta.
+const EXTRA_ROLES := {"roof": "6b5b4a", "thatch": "c8a766", "crop": "5fa043", "soil": "5a4333"}
+
+const MEDIEVAL_PALETTES := [
+	{"concrete": "dcdfcc", "trim": "b6bca3", "dark": "4a3524", "glow": "3d6fd0", "roof": "3d6fd0", "thatch": "c8a766", "crop": "5fa043", "soil": "5a4333"},
+	{"concrete": "e3dccb", "trim": "bdb29c", "dark": "47301f", "glow": "c0432f", "roof": "c0432f", "thatch": "c8a766", "crop": "6aa84a", "soil": "5a4333"},
+	{"concrete": "d4dccf", "trim": "a9b8a4", "dark": "3f3a2a", "glow": "2f8f7a", "roof": "2f8f7a", "thatch": "d2b574", "crop": "5fa043", "soil": "574132"},
+	{"concrete": "d9d6dc", "trim": "b0abb8", "dark": "3a3040", "glow": "7a5bc0", "roof": "7a5bc0", "thatch": "c8a766", "crop": "5fa043", "soil": "5a4333"},
+]
+
+
+static func palette(index: int, style: int = 0) -> Dictionary:
+	var list: Array = MEDIEVAL_PALETTES if style == BuildingRecipe.STYLE_MEDIEVAL else PALETTES
+	var src: Dictionary = list[clampi(index, 0, list.size() - 1)]
 	var out := {}
+	for role: String in EXTRA_ROLES:
+		out[role] = Color(EXTRA_ROLES[role])
 	for role: String in src:
 		out[role] = Color(src[role])
 	return out
@@ -52,6 +68,44 @@ static func build_mesh(parts: Array, palette: Dictionary) -> ArrayMesh:
 	return mesh
 
 
+# Ink outline: the same triangles pushed out along smoothed normals, drawn black with front faces
+# culled (inverted hull). Only the silhouette and the rims of parts that stick out of others show.
+static func build_outline_mesh(parts: Array, thickness: float) -> ArrayMesh:
+	var verts := PackedVector3Array()
+	var face_normals := PackedVector3Array()
+	for part: Dictionary in parts:
+		for tri: Array in _part_triangles(part):
+			for i in [0, 2, 1]:
+				verts.append(tri[i])
+				face_normals.append(tri[3])
+	if verts.is_empty():
+		return null
+	var sums := {}
+	for i in verts.size():
+		var key := _key(verts[i])
+		sums[key] = (sums[key] if sums.has(key) else Vector3.ZERO) + face_normals[i]
+	var pushed := PackedVector3Array()
+	var normals := PackedVector3Array()
+	var colours := PackedColorArray()
+	for i in verts.size():
+		var n: Vector3 = (sums[_key(verts[i])] as Vector3).normalized()
+		pushed.append(verts[i] + n * thickness)
+		normals.append(n)
+		colours.append(INK)
+	var arrays := []
+	arrays.resize(Mesh.ARRAY_MAX)
+	arrays[Mesh.ARRAY_VERTEX] = pushed
+	arrays[Mesh.ARRAY_NORMAL] = normals
+	arrays[Mesh.ARRAY_COLOR] = colours
+	var mesh := ArrayMesh.new()
+	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+	return mesh
+
+
+static func _key(v: Vector3) -> Vector3i:
+	return Vector3i(roundi(v.x * 1000.0), roundi(v.y * 1000.0), roundi(v.z * 1000.0))
+
+
 # Each triangle is [a, b, c, normal] with normal already pointing out of the part.
 static func _part_triangles(part: Dictionary) -> Array:
 	var pos: Vector3 = part["pos"]
@@ -67,6 +121,8 @@ static func _part_triangles(part: Dictionary) -> Array:
 			return _cylinder_tris(pos, size)
 		"prism":
 			return _prism_tris(pos, size, part["profile"], part["axis"])
+		"cone":
+			return _cone_tris(pos, size)
 	return []
 
 
@@ -131,6 +187,25 @@ static func _cylinder_tris(pos: Vector3, size: Vector3) -> Array:
 		var mid := (b0 + b1 + t0 + t1) * 0.25
 		out.append_array(_quad(b0, b1, t1, t0, mid - pos))
 		out.append_array(_tri(centre_top, t0, t1, Vector3.UP))
+		out.append_array(_tri(centre_bottom, b1, b0, Vector3.DOWN))
+	return out
+
+
+# Round pyramid: base circle at the bottom of the box, apex at the top centre.
+static func _cone_tris(pos: Vector3, size: Vector3) -> Array:
+	var out: Array = []
+	var rx := size.x * 0.5
+	var rz := size.z * 0.5
+	var y0 := pos.y - size.y * 0.5
+	var apex := Vector3(pos.x, pos.y + size.y * 0.5, pos.z)
+	var centre_bottom := Vector3(pos.x, y0, pos.z)
+	for i in CYL_SEGMENTS:
+		var a0 := TAU * float(i) / CYL_SEGMENTS
+		var a1 := TAU * float(i + 1) / CYL_SEGMENTS
+		var b0 := Vector3(pos.x + cos(a0) * rx, y0, pos.z + sin(a0) * rz)
+		var b1 := Vector3(pos.x + cos(a1) * rx, y0, pos.z + sin(a1) * rz)
+		var mid := (b0 + b1 + apex) / 3.0
+		out.append_array(_tri(b0, b1, apex, Vector3(mid.x - pos.x, 0.0, mid.z - pos.z)))
 		out.append_array(_tri(centre_bottom, b1, b0, Vector3.DOWN))
 	return out
 
